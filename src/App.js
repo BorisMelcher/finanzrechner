@@ -203,8 +203,8 @@ const STEUERMODELLE = {
 };
 
 const DEFAULT_TOEPFE = [
-  { id: 1, name: "ETF-Depot", steuermodell: "etf",    startKapital: 18000, sparrateMonatlich: 600, rendite: 7.0, entnahmeReihenfolge: 2, ausfallrate: 0, farbe: TOPF_FARBEN[0] },
-  { id: 2, name: "P2P",       steuermodell: "zinsen", startKapital: 33000, sparrateMonatlich: 100, rendite: 8.5, entnahmeReihenfolge: 1, ausfallrate: 0, farbe: TOPF_FARBEN[1] },
+  { id: 1, name: "ETF-Depot", steuermodell: "etf",    startKapital: 10000, sparrateMonatlich: 250, rendite: 7.0, entnahmeReihenfolge: 2, ausfallrate: 0, farbe: TOPF_FARBEN[0] },
+  { id: 2, name: "Zinskonto", steuermodell: "zinsen", startKapital: 5000,  sparrateMonatlich: 250, rendite: 4.0, entnahmeReihenfolge: 1, ausfallrate: 0, farbe: TOPF_FARBEN[1] },
 ];
 
 let naechsteId = 3;
@@ -945,24 +945,24 @@ export default function Finanzrechner() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [toepfe, setToepfe] = useState(DEFAULT_TOEPFE);
 
-  const [alter, setAlter] = useState(35);
+  const [alter, setAlter] = useState(30);
   const [lebenserwartung, setLebenserwartung] = useState(85);
-  const [rentenalter, setRentenalter] = useState(65);
+  const [rentenalter, setRentenalter] = useState(67);
 
-  const [gehalt, setGehalt] = useState(2900);
-  const [fixkosten, setFixkosten] = useState(1900);
+  const [gehalt, setGehalt] = useState(3000);
+  const [fixkosten, setFixkosten] = useState(2000);
   const [gehaltszuwachs, setGehaltszuwachs] = useState(1);
   const [inflation, setInflation] = useState(2.5);
 
-  const [startStunden, setStartStunden] = useState(35);
+  const [startStunden, setStartStunden] = useState(40);
   const [ankerStunden, setAnkerStunden] = useState(20);
-  const [ankerNetto, setAnkerNetto] = useState(1823);
+  const [ankerNetto, setAnkerNetto] = useState(1500);
   const [reduktionIntervall, setReduktionIntervall] = useState(2);
-  const [reduktionProSchritt, setReduktionProSchritt] = useState(1);
+  const [reduktionProSchritt, setReduktionProSchritt] = useState(0);
   const [reduktionOffset, setReduktionOffset] = useState(0);
   const [minStunden, setMinStunden] = useState(20);
 
-  const [renteMonatlich, setRenteMonatlich] = useState(1000);
+  const [renteMonatlich, setRenteMonatlich] = useState(0);
   const [renteBeginnAlter, setRenteBeginnAlter] = useState(67);
   const [rentensteigerung, setRentensteigerung] = useState(1.5);
 
@@ -1073,14 +1073,11 @@ export default function Finanzrechner() {
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: S.xxl }}>
-        <div style={{ fontSize: T.xs, letterSpacing: "0.3em", color: C.green, textTransform: "uppercase", marginBottom: S.xs }}>
-          Finanzielle Freiheit
-        </div>
         <h1 style={{ fontSize: T.h1, fontWeight: T.black, margin: 0, letterSpacing: "-0.02em", color: C.textWhite }}>
-          Gleitender Übergang
+          Finanzrechner
         </h1>
-        <p style={{ color: C.textMuted, fontSize: T.md, marginTop: S.xs }}>
-          Weniger arbeiten · Mehr leben · Exponentiell wachsen
+        <p style={{ color: C.textMuted, fontSize: T.sm, marginTop: S.xs }}>
+          Kein Ersatz für individuelle Finanzberatung · Alle Angaben ohne Gewähr
         </p>
         <button onClick={() => setModalOffen(true)}
           style={{ marginTop: S.md, background: "none", border: `1px solid ${C.border}`, borderRadius: R.pill, color: C.textMuted, fontSize: T.xs, cursor: "pointer", padding: `${S.xs} ${S.md}`, letterSpacing: "0.08em" }}>
@@ -1232,7 +1229,7 @@ export default function Finanzrechner() {
               onChange={setReduktionOffset} format={v => v === 0 ? "sofort" : `${v} Jahr${v > 1 ? "en" : ""}`} farbe={C.amber} />
             <Slider label="Reduktion alle X Jahre" value={reduktionIntervall} min={1} max={5} step={1}
               onChange={setReduktionIntervall} format={v => `${v} Jahre`} farbe={C.amber} />
-            <Slider label="Stunden pro Schritt" value={reduktionProSchritt} min={0.5} max={5} step={0.5}
+            <Slider label="Stunden pro Schritt" value={reduktionProSchritt} min={0} max={5} step={0.5}
               onChange={setReduktionProSchritt} format={fmt.stunden} farbe={C.amber} />
             <Slider label="Minimum Stunden/Woche" value={minStunden} min={0} max={25} step={1}
               onChange={setMinStunden} format={v => v === 0 ? "Rente 🎉" : fmt.stunden(v)} farbe={C.amber} />
@@ -1291,16 +1288,7 @@ export default function Finanzrechner() {
             onChange={setFixkostenRuhestandFaktor} format={v => `${v}% (${fmt.euro(fixkosten * v / 100)}/Mo.)`} farbe={C.purple} />
           <Slider label="GKV-Beitrag im Ruhestand" value={gkvBeitrag} min={0} max={900} step={10}
             onChange={setGkvBeitrag} format={fmt.euro} farbe={C.purple} />
-          {renteMonatlich > 0 && (
-            <InfoBox farbe={C.purple}>
-              Ab Alter {renteBeginnAlter}:{" "}
-              <span style={STYLES.monoValue(C.purple)}>{fmt.euroMo(renteMonatlich)}</span>
-              {" · "}Mit Alter {lebenserwartung}:{" "}
-              <span style={STYLES.monoValue(C.purple)}>
-                {fmt.euroMo(renteMonatlich * Math.pow(1 + rentensteigerung / 100, Math.max(0, lebenserwartung - renteBeginnAlter)))}
-              </span>{" "}(nach Steigerung)
-            </InfoBox>
-          )}
+
         </div>
 
         {/* Steueraenderungs-Szenario */}
